@@ -1,31 +1,26 @@
+#
 # Multi-Architecture PostgreSQL 17 + PostGIS 3.5
 # Supports: linux/amd64, linux/arm64
-# Built for testing with testcontainers
+# Built for cross-platform use in testcontainers
+#
 
-FROM ghcr.io/cloudnative-pg/postgresql:17
+FROM postgres:17-bookworm
 
-# PostGIS version configuration
-ENV POSTGIS_MAJOR=3 \
-    PG_MAJOR=17
+LABEL maintainer="Lumex" \
+      org.opencontainers.image.description="Multi-architecture PostgreSQL 17 + PostGIS 3.5 for testcontainers" \
+      org.opencontainers.image.source="https://github.com/lumex-ai/postgres-postgis-multiarch" \
+      org.opencontainers.image.licenses="MIT"
 
-# Switch to root to install packages
-USER root
+ENV POSTGIS_MAJOR=3
+ENV POSTGIS_VERSION=3.5.*
 
-# Install PostGIS packages (works on both ARM64 and AMD64)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        ca-certificates \
-        postgresql-${PG_MAJOR}-postgis-${POSTGIS_MAJOR} \
-        postgresql-${PG_MAJOR}-postgis-${POSTGIS_MAJOR}-scripts \
-        postgis && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+      && apt-get install -y --no-install-recommends \
+           ca-certificates \
+           postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR \
+           postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR-scripts \
+      && rm -rf /var/lib/apt/lists/*
 
-# Switch back to postgres user
-USER postgres
-
-# Metadata
-LABEL org.opencontainers.image.source="https://github.com/lumex-ai/postgres-postgis-multiarch"
-LABEL org.opencontainers.image.description="Multi-architecture PostgreSQL 17 + PostGIS 3.5 for testing"
-LABEL org.opencontainers.image.licenses="MIT"
-LABEL maintainer="Lumex"
+# Copy PostGIS initialization script
+RUN mkdir -p /docker-entrypoint-initdb.d
+COPY ./initdb-postgis.sh /docker-entrypoint-initdb.d/10_postgis.sh
