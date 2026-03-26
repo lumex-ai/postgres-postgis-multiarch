@@ -18,7 +18,7 @@ env:
 jobs:
   build-and-push:
     name: Build Multi-Arch Image
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: write  # Required to push to ghcr.io
@@ -26,6 +26,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup runner
+        uses: lumex-ai/.github/.github/actions/setup-runner@main
 
       - name: Set up QEMU for multi-arch
         uses: docker/setup-qemu-action@v3
